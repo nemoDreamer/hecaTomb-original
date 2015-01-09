@@ -1,3 +1,3 @@
 @echo off
-edit gsamax.lvl
+edit max.lvl
 
