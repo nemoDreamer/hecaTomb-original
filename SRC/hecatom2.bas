@@ -1,4 +1,4 @@
-'ON ERROR GOTO fehler
+ON ERROR GOTO fehler
 
 user$ = "MARTIN HENKES"
 
@@ -31,6 +31,7 @@ sstart:
 r$ = INPUT$(1)
 IF r$ = "1" THEN speedfaktor = 66 ELSE IF r$ = "2" THEN speedfaktor = 100 ELSE IF r$ = "3" THEN speedfaktor = 220 ELSE IF r$ = "4" THEN LOCATE 15, 35: INPUT "Mhz "; speedfaktor ELSE GOTO sstart
 speedfaktor = speedfaktor / 66
+speedsave=speedfaktor
 
 OPEN "gsamax.lvl" FOR INPUT AS #1
 INPUT #1, maxlevel
@@ -59,45 +60,33 @@ GOSUB frame
 LOCATE 12, 35
 COLOR 9
 PRINT "LOADING..."
-
-REDIM monfor(xpic, ypic)
-REDIM mo6ed(xpic, ypic)
-REDIM mon3(xpic, ypic)
-REDIM mon4(xpic, ypic)
-REDIM mon5(xpic, ypic)
-REDIM wall(xpic, ypic)
-REDIM gate(xpic, ypic)
-REDIM gateo(xpic, ypic)
-REDIM spear(xpic, ypic)
-REDIM goal(xpic, ypic)
-REDIM start(xpic, ypic)
-REDIM you(xpic, ypic)
-REDIM keys(xpic, ypic)
-REDIM mowall(xpic, ypic)
-REDIM blood(xpic, ypic)
-REDIM youw(xpic, ypic)
-REDIM water(xpic, ypic)
-REDIM wblood(xpic, ypic)
-REDIM wmonst(xpic, ypic)
-REDIM money(xpic, ypic)
-REDIM dagger(xpic, ypic)
-REDIM bones(xpic, ypic)
+'REDIM monfor(xpic, ypic)
+'REDIM mo6ed(xpic, ypic)
+'REDIM mon3(xpic, ypic)
+'REDIM mon4(xpic, ypic)
+'REDIM mon5(xpic, ypic)
+'REDIM wall(xpic, ypic)
+'REDIM gate(xpic, ypic)
+'REDIM gateo(xpic, ypic)
+'REDIM spear(xpic, ypic)
+'REDIM goal(xpic, ypic)
+'REDIM start(xpic, ypic)
+'REDIM you(xpic, ypic)
+'REDIM keys(xpic, ypic)
+'REDIM mowall(xpic, ypic)
+'REDIM blood(xpic, ypic)
+'REDIM youw(xpic, ypic)
+'REDIM water(xpic, ypic)
+'REDIM wblood(xpic, ypic)
+'REDIM wmonst(xpic, ypic)
+'REDIM money(xpic, ypic)
+'REDIM dagger(xpic, ypic)
+'REDIM bones(xpic, ypic)
+'REDIM zisch(xpic, ypic)
+'REDIM zisch2(xpic, ypic)
 REDIM wide(350, 40)
 REDIM title(355, 45)
-
-'DIM highname$(10)
-'DIM highscore(10)
 '
-'OPEN "highscor.es" FOR OUTPUT AS #1
-'        FOR hi = 1 TO 10
-'                highname$(hi) = "Philip"
-'                highscore(hi) = 1000
-'                WRITE #1, highname$(hi), highscore(hi)
-'        NEXT
-'CLOSE
-'end
-
-
 GOSUB loadpics
 
 'goto infohelp '* * * * * * *
@@ -151,13 +140,13 @@ y=0
 daggers = 0
 spears = 0
 clef = 0
-loadcoords=0
 
 params:
 
 score = 0
 
-O = 0
+speedfaktor=speedsave
+freeze = 0
 s = 0
 burst = 0
 scr = 1
@@ -174,17 +163,19 @@ speax = 26.5
 clex = 27.5
 IF speed = 0 THEN monspeed = 4000
 IF speed = 0 THEN wspeed = 3000
+fishspeed=10
 
-if loadcoords<>1 then
+if (x=0) and (y=0) then
 	FOR xx = 1 TO xmax
 	FOR yy = 1 TO ymax
-	IF feld(xx, yy) = 1.5 THEN x = xx: y = yy: found = 1: GOTO st
+		IF feld(xx, yy) = 1.5 THEN x = xx: y = yy: found = 1: GOTO st
 	NEXT
 	NEXT
+else
+	found=1
 end if
 
 st:
-loadcoords=0
 CLS 2
 IF found = 0 THEN GOTO anf
 'Draw Objects
@@ -204,7 +195,7 @@ NEXT
 
 drx = x
 dry = y
-what = 11
+if feld(x,y)=55 then what=33 else what = 11
 GOSUB drawobjs
 
 'Count monsters
@@ -245,6 +236,8 @@ code7$ = "see by touch"
 code8$ = "wimpey cheater code"
 code9$ = "see the dark"
 code10$ = "trace the dark"
+code11$ = "freeze all"
+code12$ = "impossible speed"
 
 code:
 INPUT code$
@@ -288,6 +281,8 @@ IF code$ = code9$ THEN
 	PRINT "Next Code";
 	GOTO code
 END IF
+IF code$ = code11$ THEN PLAY "t150 l50 o2 cdefga l25 b":freeze=1: PRINT "Next Code"; : GOTO code
+IF code$ = code12$ THEN PLAY "t150 l50 o2 cdefga l25 b":speedfaktor=0: PRINT "Next Code"; : GOTO code
 
 PLAY "t150 l50 o2 bagfed l25 c"
 GOTO codecont
@@ -307,7 +302,16 @@ IF s = 1 THEN GOSUB prspear: GOSUB prdagg: GOSUB prclef: GOSUB prscore
 
 r$ = INKEY$
 wmove = wmove + 1
-momove = momove + 1
+if freeze <>1 then momove = momove + 1
+fishmove=fishmove+1
+
+IF fishmove >= fishspeed * speedfaktor THEN
+	drx=int(rnd*xmax+1)
+	dry=int(rnd*ymax+1)
+	if feld(drx,dry)=600 then what=600:gosub drawobjs
+	fishmove=0
+end if
+
 
 IF wmove >= wspeed * speedfaktor THEN
 FOR mo = 1 TO count
@@ -631,6 +635,30 @@ IF feld(x, y) = 9 THEN
 	IF wholegame = 1 THEN GOTO startnew ELSE GOTO anf
 END IF
 
+IF feld(x, y) = 600 THEN
+  if spears>=5 then
+      for spearsminus=1 to 5
+	spears=spears-1
+	gosub prspear
+      next
+      feld(x, y) = 601
+  else
+	drx = x
+	dry = y
+	what = 1.1
+	GOSUB drawobjs
+      GOSUB cb
+      LOCATE 21, 1
+      PLAY "mbmbmbmb o2 t150 l50 bagfed l25 c"
+      PRINT "You got killed!!!"
+      PRINT "Retry Level? (y/n)"
+333 :   O$ = INPUT$(1)
+      IF O$ <> "y" AND O$ <> "n" THEN GOTO 333
+      IF O$ = "y" THEN IF wholegame = 1 THEN GOTO restartnew ELSE GOTO restart
+      GOTO anf
+  end if
+end if
+
 IF feld(x, y) = 4.5 THEN
 		IF killbac <> 0 THEN
 			score = score - (100 * scr)
@@ -745,58 +773,59 @@ END
 
 '****************************************************************************
 drawobjs:
+
 SELECT CASE what
 CASE 0
-LINE ((drx * big) - big + 1, (dry * big) - big + 1)-((drx * big), (dry * big)), 0, BF
+'LINE ((drx * big) - big + 1, (dry * big) - big + 1)-((drx * big), (dry * big)), 0, BF
 CASE 1
-PUT ((drx * big) - big + 1, (dry * big) - big + 1), start, PSET
+'PUT ((drx * big) - big + 1, (dry * big) - big + 1), start, PSET
 CASE 2
-PUT ((drx * big) - big + 1, (dry * big) - big + 1), wall, PSET
+'PUT ((drx * big) - big + 1, (dry * big) - big + 1), wall, PSET
 CASE 3
-PUT ((drx * big) - big + 1, (dry * big) - big + 1), mon3, PSET
+'PUT ((drx * big) - big + 1, (dry * big) - big + 1), mon3, PSET
 CASE 4
-PUT ((drx * big) - big + 1, (dry * big) - big + 1), mon4, PSET
+'PUT ((drx * big) - big + 1, (dry * big) - big + 1), mon4, PSET
 CASE 5
-PUT ((drx * big) - big + 1, (dry * big) - big + 1), mon5, PSET
+'PUT ((drx * big) - big + 1, (dry * big) - big + 1), mon5, PSET
 CASE 6
-PUT ((drx * big) - big + 1, (dry * big) - big + 1), keys, PSET
+'PUT ((drx * big) - big + 1, (dry * big) - big + 1), keys, PSET
 CASE 7
-PUT ((drx * big) - big + 1, (dry * big) - big + 1), gate, PSET
+'PUT ((drx * big) - big + 1, (dry * big) - big + 1), gate, PSET
 CASE 75
-PUT ((drx * big) - big + 1, (dry * big) - big + 1), gateo, PSET
+'PUT ((drx * big) - big + 1, (dry * big) - big + 1), gateo, PSET
 CASE 8
-PUT ((drx * big) - big + 1, (dry * big) - big + 1), spear, PSET
+'PUT ((drx * big) - big + 1, (dry * big) - big + 1), spear, PSET
 CASE 9
-PUT ((drx * big) - big + 1, (dry * big) - big + 1), goal, PSET
+'PUT ((drx * big) - big + 1, (dry * big) - big + 1), goal, PSET
 CASE 11
 FOR xxp = 1 TO 11
 	FOR yyp = 1 TO 11
 		IF you(xxp, yyp) <> 0 THEN PSET ((drx * big) - big + xxp, (dry * big) - big + yyp), you(xxp, yyp)
 	NEXT
 NEXT
-'PUT ((drx * big) - big +1, (dry * big) - big +1), you, pset
+''PUT ((drx * big) - big +1, (dry * big) - big +1), you, pset
 CASE 22
-PUT ((drx * big) - big + 1, (dry * big) - big + 1), blood, PSET
+'PUT ((drx * big) - big + 1, (dry * big) - big + 1), blood, PSET
 CASE 55
-PUT ((drx * big) - big + 1, (dry * big) - big + 1), water, PSET
+'PUT ((drx * big) - big + 1, (dry * big) - big + 1), water, PSET
 CASE 33
-PUT ((drx * big) - big + 1, (dry * big) - big + 1), youw, PSET
+'PUT ((drx * big) - big + 1, (dry * big) - big + 1), youw, PSET
 CASE 66
-PUT ((drx * big) - big + 1, (dry * big) - big + 1), wmonst, PSET
+'PUT ((drx * big) - big + 1, (dry * big) - big + 1), wmonst, PSET
 CASE 77
-PUT ((drx * big) - big + 1, (dry * big) - big + 1), wblood, PSET
+'PUT ((drx * big) - big + 1, (dry * big) - big + 1), wblood, PSET
 CASE 88
-PUT ((drx * big) - big + 1, (dry * big) - big + 1), dagger, PSET
+'PUT ((drx * big) - big + 1, (dry * big) - big + 1), dagger, PSET
 CASE 99
-PUT ((drx * big) - big + 1, (dry * big) - big + 1), money, PSET
+'PUT ((drx * big) - big + 1, (dry * big) - big + 1), money, PSET
 CASE 222
-LINE ((drx * big) - big + 1, (dry * big) - big + 1)-((drx * big), (dry * big)), 0, BF
+'LINE ((drx * big) - big + 1, (dry * big) - big + 1)-((drx * big), (dry * big)), 0, BF
 CASE 3.5
-PUT ((drx * big) - big + 1, (dry * big) - big + 1), mowall, PSET
+'PUT ((drx * big) - big + 1, (dry * big) - big + 1), mowall, PSET
 CASE 22.22
-PUT ((drx * big) - big + 1, (dry * big) - big + 1), mo6ed, PSET
+'PUT ((drx * big) - big + 1, (dry * big) - big + 1), mo6ed, PSET
 CASE 12.12
-PSET ((drx * big) - big + big / 2, (dry * big) - big + big / 2), 8
+'PSET ((drx * big) - big + big / 2, (dry * big) - big + big / 2), 8
 CASE 4.5
 LINE ((drx * big) - big + 1, (dry * big) - big + 1)-((drx * big), (dry * big)), 0, BF
 	FOR slime = 1 TO 5
@@ -816,7 +845,7 @@ FOR xxp = 1 TO 11
 	NEXT
 NEXT
 CASE 5.5
-PUT ((drx * big) - big + 1, (dry * big) - big + 1), money, PSET
+'PUT ((drx * big) - big + 1, (dry * big) - big + 1), money, PSET
 	PSET ((drx * big) - (big / 2) + 1, (dry * big) - (big / 2) + 2), 6
 	PSET ((drx * big) - (big / 2), (dry * big) - (big / 2) + 1), 6
 	PSET ((drx * big) - (big / 2) - 1, (dry * big) - (big / 2) + 2), 6
@@ -857,14 +886,14 @@ CASE 3.3
 		PSET ((drx * big) - big + 1 + xslm, (dry * big) - big + 1 + yslm), 4
 	NEXT
 CASE 1.5
-	PUT ((drx * big) - big + 1, (dry * big) - big + 1), start, PSET
+'        PUT ((drx * big) - big + 1, (dry * big) - big + 1), start, PSET
 	xi = drx * big
 	yi = dry * big
 	spac = 3
 	LINE (xi - spac, yi - big + spac)-(xi - big + spac, yi - spac), 14
 	LINE (xi - big + spac, yi - big + spac)-(xi - spac, yi - spac), 14
 CASE 2222
-	PUT ((drx * big) - big + 1, (dry * big) - big + 1), wall, PSET
+'        PUT ((drx * big) - big + 1, (dry * big) - big + 1), wall, PSET
 	FOR slime = 1 TO 20
 		xslm = INT(RND * 11)
 		yslm = INT(RND * 11)
@@ -884,156 +913,173 @@ CASE 3333
 		yslm = INT(RND * 11)
 		PSET ((drx * big) - big + 1 + xslm, (dry * big) - big + 1 + yslm), 6
 	NEXT
+CASE 600
+'        PUT ((drx * big) - big + 1, (dry * big) - big + 1), water, PSET
+	FOR slime = 1 TO 10
+		xslm = INT(RND * 11)
+		yslm = INT(RND * 11)
+		PSET ((drx * big) - big + 1 + xslm, (dry * big) - big + 1 + yslm), 12
+	NEXT
+CASE 601
+'        PUT ((drx * big) - big + 1, (dry * big) - big + 1), zisch2, PSET
 CASE ELSE
 END SELECT
 RETURN
 
 
 '((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((
-loadpics:
-
-FOR loapic = 1 TO 23
-SELECT CASE loapic
-CASE 1
-file$ = "gsamon3.phg"
-CASE 2
-file$ = "gsamon4.phg"
-CASE 3
-file$ = "gsawall.phg"
-CASE 4
-file$ = "gsagate.phg"
-CASE 5
-file$ = "gsagateo.phg"
-CASE 6
-file$ = "gsaspear.phg"
-CASE 7
-file$ = "gsagoal.phg"
-CASE 8
-file$ = "gsastart.phg"
-CASE 9
-file$ = "gsayou.phg"
-CASE 10
-file$ = "gsamon5.phg"
-CASE 11
-file$ = "gsakeys.phg"
-CASE 12
-file$ = "gsamon6.phg"
-CASE 13
-file$ = "gsablood.phg"
-CASE 14
-file$ = "gsawide.phg"
-CASE 15
-'file$ = "gsatitle.phg" '* * * * * * * * * * * * * * * * * * * * *
-file$ = "gsatitl2.phg"
-CASE 16
-file$ = "gsayouw.phg"
-CASE 17
-file$ = "gsawater.phg"
-CASE 18
-file$ = "gsawbloo.phg"
-CASE 19
-file$ = "gsawmons.phg"
-CASE 20
-file$ = "gsadaggr.phg"
-CASE 21
-file$ = "gsamoney.phg"
-CASE 22
-file$ = "gsabones.phg"
-CASE 23
-file$ = "gsamo6ed.phg"
-END SELECT
-
-OPEN file$ FOR INPUT AS #1
-	INPUT #1, xpic
-	INPUT #1, ypic
-	FOR xxp = 1 TO xpic
-		FOR yyp = 1 TO ypic
-			INPUT #1, picdata
-			IF loapic = 1 THEN mon3(xxp, yyp) = picdata
-			IF loapic = 2 THEN mon4(xxp, yyp) = picdata
-			IF loapic = 3 THEN wall(xxp, yyp) = picdata
-			IF loapic = 4 THEN gate(xxp, yyp) = picdata
-			IF loapic = 5 THEN gateo(xxp, yyp) = picdata
-			IF loapic = 6 THEN spear(xxp, yyp) = picdata
-			IF loapic = 7 THEN goal(xxp, yyp) = picdata
-			IF loapic = 8 THEN start(xxp, yyp) = picdata
-			IF loapic = 9 THEN you(xxp, yyp) = picdata
-			IF loapic = 10 THEN mon5(xxp, yyp) = picdata
-			IF loapic = 11 THEN keys(xxp, yyp) = picdata
-			IF loapic = 12 THEN mowall(xxp, yyp) = picdata
-			IF loapic = 13 THEN blood(xxp, yyp) = picdata
-			IF loapic = 14 THEN wide(xxp, yyp) = picdata
-			IF loapic = 15 THEN title(xxp, yyp) = picdata
-			IF loapic = 16 THEN youw(xxp, yyp) = picdata
-			IF loapic = 17 THEN water(xxp, yyp) = picdata
-			IF loapic = 18 THEN wblood(xxp, yyp) = picdata
-			IF loapic = 19 THEN wmonst(xxp, yyp) = picdata
-			IF loapic = 20 THEN dagger(xxp, yyp) = picdata
-			IF loapic = 21 THEN money(xxp, yyp) = picdata
-			IF loapic = 22 THEN bones(xxp, yyp) = picdata
-			IF loapic = 23 THEN mo6ed(xxp, yyp) = picdata
-		NEXT yyp
-	NEXT xxp
-CLOSE
-NEXT loapic
-
-'GET objects
-CLS
-xlp = 315
-ylp = 145
-FOR show = 2 TO 20
-	FOR xxp = 1 TO 11
-		FOR yyp = 1 TO 11
-'                        IF show = 1 THEN PSET (xxp + xlp, yyp + ylp), you(xxp, yyp)
-			IF show = 2 THEN PSET (xxp + xlp, yyp + ylp), start(xxp, yyp)
-			IF show = 3 THEN PSET (xxp + xlp, yyp + ylp), wall(xxp, yyp)
-			IF show = 4 THEN PSET (xxp + xlp, yyp + ylp), mon3(xxp, yyp)
-			IF show = 5 THEN PSET (xxp + xlp, yyp + ylp), mon4(xxp, yyp)
-			IF show = 6 THEN PSET (xxp + xlp, yyp + ylp), mon5(xxp, yyp)
-			IF show = 7 THEN PSET (xxp + xlp, yyp + ylp), spear(xxp, yyp)
-			IF show = 8 THEN PSET (xxp + xlp, yyp + ylp), goal(xxp, yyp)
-			IF show = 9 THEN PSET (xxp + xlp, yyp + ylp), gate(xxp, yyp)
-			IF show = 10 THEN PSET (xxp + xlp, yyp + ylp), gateo(xxp, yyp)
-			IF show = 11 THEN PSET (xxp + xlp, yyp + ylp), keys(xxp, yyp)
-			IF show = 12 THEN PSET (xxp + xlp, yyp + ylp), blood(xxp, yyp)
-			IF show = 13 THEN PSET (xxp + xlp, yyp + ylp), youw(xxp, yyp)
-			IF show = 14 THEN PSET (xxp + xlp, yyp + ylp), water(xxp, yyp)
-			IF show = 15 THEN PSET (xxp + xlp, yyp + ylp), wblood(xxp, yyp)
-			IF show = 16 THEN PSET (xxp + xlp, yyp + ylp), wmonst(xxp, yyp)
-			IF show = 17 THEN PSET (xxp + xlp, yyp + ylp), dagger(xxp, yyp)
-			IF show = 18 THEN PSET (xxp + xlp, yyp + ylp), money(xxp, yyp)
-			IF show = 19 THEN PSET (xxp + xlp, yyp + ylp), mowall(xxp, yyp)
-'                        IF show = 20 THEN PSET (xxp + xlp, yyp + ylp), bones(xxp, yyp)
-			IF show = 20 THEN PSET (xxp + xlp, yyp + ylp), mo6ed(xxp, yyp)
-		NEXT yyp
-	NEXT xxp
-'t$=input$(1)
-'                        IF show = 1 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), you
-			IF show = 2 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), start
-			IF show = 3 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), wall
-			IF show = 4 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), mon3
-			IF show = 5 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), mon4
-			IF show = 6 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), mon5
-			IF show = 7 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), spear
-			IF show = 8 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), goal
-			IF show = 9 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), gate
-			IF show = 10 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), gateo
-			IF show = 11 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), keys
-			IF show = 12 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), blood
-			IF show = 13 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), youw
-			IF show = 14 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), water
-			IF show = 15 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), wblood
-			IF show = 16 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), wmonst
-			IF show = 17 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), dagger
-			IF show = 18 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), money
-			IF show = 19 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), mowall
-'                        IF show = 20 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), bones
-			IF show = 20 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), mo6ed
-NEXT show
-'goto info '* * * * * * *
-
-
-RETURN
+'loadpics:
+'
+'FOR loapic = 1 TO 25
+'SELECT CASE loapic
+'CASE 1
+'file$ = "gsamon3.phg"
+'CASE 2
+'file$ = "gsamon4.phg"
+'CASE 3
+'file$ = "gsawall.phg"
+'CASE 4
+'file$ = "gsagate.phg"
+'CASE 5
+'file$ = "gsagateo.phg"
+'CASE 6
+'file$ = "gsaspear.phg"
+'CASE 7
+'file$ = "gsagoal.phg"
+'CASE 8
+'file$ = "gsastart.phg"
+'CASE 9
+'file$ = "gsayou.phg"
+'CASE 10
+'file$ = "gsamon5.phg"
+'CASE 11
+'file$ = "gsakeys.phg"
+'CASE 12
+'file$ = "gsamon6.phg"
+'CASE 13
+'file$ = "gsablood.phg"
+'CASE 14
+'file$ = "gsawide.phg"
+'CASE 15
+''file$ = "gsatitle.phg" '* * * * * * * * * * * * * * * * * * * * *
+'file$ = "gsatitl2.phg"
+'CASE 16
+'file$ = "gsayouw.phg"
+'CASE 17
+'file$ = "gsawater.phg"
+'CASE 18
+'file$ = "gsawbloo.phg"
+'CASE 19
+'file$ = "gsawmons.phg"
+'CASE 20
+'file$ = "gsadaggr.phg"
+'CASE 21
+'file$ = "gsamoney.phg"
+'CASE 22
+'file$ = "gsabones.phg"
+'CASE 23
+'file$ = "gsamo6ed.phg"
+'CASE 24
+'file$ = "gsazi.phg"
+'CASE 25
+'file$ = "gsazi2.phg"
+'END SELECT
+'
+'OPEN file$ FOR INPUT AS #1
+'        INPUT #1, xpic
+'        INPUT #1, ypic
+'        FOR xxp = 1 TO xpic
+'                FOR yyp = 1 TO ypic
+'                        INPUT #1, picdata
+'                        IF loapic = 1 THEN mon3(xxp, yyp) = picdata
+'                        IF loapic = 2 THEN mon4(xxp, yyp) = picdata
+'                        IF loapic = 3 THEN wall(xxp, yyp) = picdata
+'                        IF loapic = 4 THEN gate(xxp, yyp) = picdata
+'                        IF loapic = 5 THEN gateo(xxp, yyp) = picdata
+'                        IF loapic = 6 THEN spear(xxp, yyp) = picdata
+'                        IF loapic = 7 THEN goal(xxp, yyp) = picdata
+'                        IF loapic = 8 THEN start(xxp, yyp) = picdata
+'                        IF loapic = 9 THEN you(xxp, yyp) = picdata
+'                        IF loapic = 10 THEN mon5(xxp, yyp) = picdata
+'                        IF loapic = 11 THEN keys(xxp, yyp) = picdata
+'                        IF loapic = 12 THEN mowall(xxp, yyp) = picdata
+'                        IF loapic = 13 THEN blood(xxp, yyp) = picdata
+'                        IF loapic = 14 THEN wide(xxp, yyp) = picdata
+'                        IF loapic = 15 THEN title(xxp, yyp) = picdata
+'                        IF loapic = 16 THEN youw(xxp, yyp) = picdata
+'                        IF loapic = 17 THEN water(xxp, yyp) = picdata
+'                        IF loapic = 18 THEN wblood(xxp, yyp) = picdata
+'                        IF loapic = 19 THEN wmonst(xxp, yyp) = picdata
+'                        IF loapic = 20 THEN dagger(xxp, yyp) = picdata
+'                        IF loapic = 21 THEN money(xxp, yyp) = picdata
+'                        IF loapic = 22 THEN bones(xxp, yyp) = picdata
+'                        IF loapic = 23 THEN mo6ed(xxp, yyp) = picdata
+'                        IF loapic = 24 THEN zisch(xxp, yyp) = picdata
+'                        IF loapic = 25 THEN zisch2(xxp, yyp) = picdata
+'                NEXT yyp
+'        NEXT xxp
+'CLOSE
+'NEXT loapic
+'
+''GET objects
+'CLS
+'xlp = 315
+'ylp = 145
+'FOR show = 2 TO 22
+'        FOR xxp = 1 TO 11
+'                FOR yyp = 1 TO 11
+''                        IF show = 1 THEN PSET (xxp + xlp, yyp + ylp), you(xxp, yyp)
+'                        IF show = 2 THEN PSET (xxp + xlp, yyp + ylp), start(xxp, yyp)
+'                        IF show = 3 THEN PSET (xxp + xlp, yyp + ylp), wall(xxp, yyp)
+'                        IF show = 4 THEN PSET (xxp + xlp, yyp + ylp), mon3(xxp, yyp)
+'                        IF show = 5 THEN PSET (xxp + xlp, yyp + ylp), mon4(xxp, yyp)
+'                        IF show = 6 THEN PSET (xxp + xlp, yyp + ylp), mon5(xxp, yyp)
+'                        IF show = 7 THEN PSET (xxp + xlp, yyp + ylp), spear(xxp, yyp)
+'                        IF show = 8 THEN PSET (xxp + xlp, yyp + ylp), goal(xxp, yyp)
+'                        IF show = 9 THEN PSET (xxp + xlp, yyp + ylp), gate(xxp, yyp)
+'                        IF show = 10 THEN PSET (xxp + xlp, yyp + ylp), gateo(xxp, yyp)
+'                        IF show = 11 THEN PSET (xxp + xlp, yyp + ylp), keys(xxp, yyp)
+'                        IF show = 12 THEN PSET (xxp + xlp, yyp + ylp), blood(xxp, yyp)
+'                        IF show = 13 THEN PSET (xxp + xlp, yyp + ylp), youw(xxp, yyp)
+'                        IF show = 14 THEN PSET (xxp + xlp, yyp + ylp), water(xxp, yyp)
+'                        IF show = 15 THEN PSET (xxp + xlp, yyp + ylp), wblood(xxp, yyp)
+'                        IF show = 16 THEN PSET (xxp + xlp, yyp + ylp), wmonst(xxp, yyp)
+'                        IF show = 17 THEN PSET (xxp + xlp, yyp + ylp), dagger(xxp, yyp)
+'                        IF show = 18 THEN PSET (xxp + xlp, yyp + ylp), money(xxp, yyp)
+'                        IF show = 19 THEN PSET (xxp + xlp, yyp + ylp), mowall(xxp, yyp)
+'                        IF show = 20 THEN PSET (xxp + xlp, yyp + ylp), mo6ed(xxp, yyp)
+'                        IF show = 21 THEN PSET (xxp + xlp, yyp + ylp), zisch(xxp, yyp)
+'                        IF show = 22 THEN PSET (xxp + xlp, yyp + ylp), zisch2(xxp, yyp)
+'                NEXT yyp
+'        NEXT xxp
+''t$=input$(1)
+''                        IF show = 1 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), you
+'                        IF show = 2 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), start
+'                        IF show = 3 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), wall
+'                        IF show = 4 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), mon3
+'                        IF show = 5 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), mon4
+'                        IF show = 6 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), mon5
+'                        IF show = 7 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), spear
+'                        IF show = 8 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), goal
+'                        IF show = 9 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), gate
+'                        IF show = 10 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), gateo
+'                        IF show = 11 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), keys
+'                        IF show = 12 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), blood
+'                        IF show = 13 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), youw
+'                        IF show = 14 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), water
+'                        IF show = 15 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), wblood
+'                        IF show = 16 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), wmonst
+'                        IF show = 17 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), dagger
+'                        IF show = 18 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), money
+'                        IF show = 19 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), mowall
+'                        IF show = 20 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), mo6ed
+'                        IF show = 21 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), zisch
+'                        IF show = 22 THEN GET (1 + xlp, 1 + ylp)-STEP(11 - 1, 11 - 1), zisch2
+'NEXT show
+''goto info '* * * * * * *
+'
+'
+'RETURN
 '))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
 
 titlepage:
@@ -1372,7 +1418,7 @@ GOTO 100
 
 infohelp:
 CLS
-'PUT (145, 1), wide, PSET '* * * * * * * * * *
+PUT (145, 1), wide, PSET '* * * * * * * * * *
 text$ = "HECATOMB": COLOR 14: LOCATE 5, 40 - LEN(text$) / 2: PRINT text$
 text$ = "Full Version by PhilBY": COLOR 4: LOCATE 6, 40 - LEN(text$) / 2: PRINT text$
 text$ = "H..H..HEEEELP File": COLOR 12: LOCATE 8, 40 - LEN(text$) / 2: PRINT text$
@@ -1456,38 +1502,50 @@ PRINT TAB(20); "to recognise infected bags, thought)"
 PRINT
 
 O$ = INPUT$(1)
+FOR clbottom = 12 TO 22
+	LOCATE clbottom
+	PRINT TAB(79); " "
+NEXT
+
+LOCATE 12
+PRINT TAB(20); "SAVING a game only saves the score you"
+PRINT TAB(20); "had at the start of the level, so that"
+PRINT TAB(20); "you lose points..."
+
+O$ = INPUT$(1)
 CLS
+
 'end '* * * * * * *
 GOTO info
 
 infostory:
-CLS
-
-text$ = "HECATOMB": COLOR 14: LOCATE 2, 40 - LEN(text$) / 2: PRINT text$
-text$ = "Full Version by PhilBY": COLOR 4: LOCATE 3, 40 - LEN(text$) / 2: PRINT text$
-text$ = "The Story": COLOR 12: LOCATE 5, 40 - LEN(text$) / 2: PRINT text$
-
-LOCATE 9
-PRINT TAB(9); "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-PRINT TAB(9); "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-PRINT TAB(9); "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-PRINT TAB(9); "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-PRINT TAB(9); "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX                       "
-PRINT TAB(9); "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX                       "
-PRINT TAB(9); "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX                       "
-PRINT TAB(9); "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX                       "
-PRINT TAB(9); "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX                       "
-PRINT TAB(9); "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX                       "
-PRINT TAB(9); "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX                       "
-PRINT TAB(9); "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-PRINT TAB(9); "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-PRINT TAB(9); "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-picture$ = "isl_wide.phg": dpx = 700: dpy = 75: ex = 0: re = 0: GOSUB showpic
-picture$ = "horns2.phg": dpx = 390: dpy = 170: ex = 0: re = 0: GOSUB showpic
-
-
-O$ = INPUT$(1)
-CLS
+'CLS
+'
+'text$ = "HECATOMB": COLOR 14: LOCATE 2, 40 - LEN(text$) / 2: PRINT text$
+'text$ = "Full Version by PhilBY": COLOR 4: LOCATE 3, 40 - LEN(text$) / 2: PRINT text$
+'text$ = "The Story": COLOR 12: LOCATE 5, 40 - LEN(text$) / 2: PRINT text$
+'
+'LOCATE 9
+'PRINT TAB(9); "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+'PRINT TAB(9); "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+'PRINT TAB(9); "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+'PRINT TAB(9); "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+'PRINT TAB(9); "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX                       "
+'PRINT TAB(9); "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX                       "
+'PRINT TAB(9); "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX                       "
+'PRINT TAB(9); "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX                       "
+'PRINT TAB(9); "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX                       "
+'PRINT TAB(9); "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX                       "
+'PRINT TAB(9); "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX                       "
+'PRINT TAB(9); "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+'PRINT TAB(9); "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+'PRINT TAB(9); "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+'picture$ = "isl_wide.phg": dpx = 700: dpy = 75: ex = 0: re = 0: GOSUB showpic
+'picture$ = "horns2.phg": dpx = 390: dpy = 170: ex = 0: re = 0: GOSUB showpic
+'
+'
+'O$ = INPUT$(1)
+'CLS
 GOTO info
 
 infophilby:
@@ -1513,11 +1571,6 @@ GOTO info
 
 infocredits:
 CLS
-'PUT (145, 1), wide, PSET '* * * * * * * * * *
-'text$ = "HECATOMB": COLOR 14: LOCATE 5, 40 - LEN(text$) / 2: PRINT text$
-'text$ = "Full Version by PhilBY": COLOR 4: LOCATE 6, 40 - LEN(text$) / 2: PRINT text$
-'text$ = "Credits": COLOR 12: LOCATE 8, 40 - LEN(text$) / 2: PRINT text$
-
 tecol = 15
 tecol2 = 4
 tpx = 25 * 8
@@ -1555,7 +1608,7 @@ FOR t = 1 TO 6
 	DO WHILE INKEY$ = "" AND square > 0
 		square = square - 1
 		i = i + 2
-		FOR splat = 1 TO 50 * i
+		FOR splat = 1 TO 60 * i
 			xf = INT(RND * tpx)
 			yf = INT(RND * tpy)
 			IF textpic(xf, yf) = 15 THEN
@@ -1739,7 +1792,7 @@ CLOSE
 score = 0
 wholegame = 1
 level = VAL(level$)
-loadcoords=0
+
 GOTO params
 
 savegame:
@@ -1751,7 +1804,6 @@ WRITE #1, spears
 WRITE #1, daggers
 WRITE #1, clef
 WRITE #1, level$
-oldscore = oldscore + score
 write #1, remark$
 write #1, xmax, ymax
 FOR xx = 1 TO xmax
@@ -1885,58 +1937,58 @@ RETURN
 '+++++++++++++++++++++++++++++++++++++++++++++
 '+++++++++++++++++++++++++++++++++++++++++++++
 endgame:
-endemal = endemal + 1
-CLS
-
-VIEW PRINT 1 TO 25
-score$ = STR$(score + oldscore)
-PLAY "mbmbmbmbmbmb t100 o1 l16 efgefd l8 c"
-text$ = "CONGRATULATIONS!"
-COLOR 12: LOCATE 15, 40 - LEN(text$) / 2: PRINT text$
-text$ = "You won with a total score of" + score$ + "!!!"
-COLOR 12: LOCATE 16, 40 - LEN(text$) / 2: PRINT text$
-
-xvs = 250
-yvs = 100
-
-IF endemal = 1 THEN
-REDIM vid1(119, 55)
-REDIM vid2(119, 55)
-REDIM vid3(119, 55)
-
-FOR num = 1 TO 3
-num$ = STR$(num)
-num$ = MID$(num$, 2, 4)
-
-OPEN "vid" + num$ + ".phg" FOR INPUT AS #1
-	INPUT #1, xvid
-	INPUT #1, yvid
-	FOR xv = 1 TO xvid
-		FOR yv = 1 TO yvid
-			INPUT #1, col
-			PSET (xv + xvs - 1, yv + yvs - 1), col
-		NEXT
-	NEXT
-CLOSE
-
-IF num = 1 THEN GET (xvs, yvs)-(118 + xvs, 54 + yvs), vid1
-IF num = 2 THEN GET (xvs, yvs)-(118 + xvs, 54 + yvs), vid2
-IF num = 3 THEN GET (xvs, yvs)-(118 + xvs, 54 + yvs), vid3
-NEXT
-END IF
-
-spd = 5000
-FOR vi = 1 TO 8
-spd = spd + 5000
-PUT (xvs, yvs), vid1, PSET: FOR tim = 1 TO spd * speedfaktor: NEXT
-PUT (xvs, yvs), vid2, PSET: FOR tim = 1 TO spd * speedfaktor: NEXT
-PUT (xvs, yvs), vid3, PSET: FOR tim = 1 TO spd * speedfaktor: NEXT
-PUT (xvs, yvs), vid2, PSET: FOR tim = 1 TO spd * speedfaktor: NEXT
-NEXT
-PUT (xvs, yvs), vid3, PSET
-
-r$ = INPUT$(1)
-
+'endemal = endemal + 1
+'CLS
+'
+'VIEW PRINT 1 TO 25
+'score$ = STR$(score + oldscore)
+'PLAY "mbmbmbmbmbmb t100 o1 l16 efgefd l8 c"
+'text$ = "CONGRATULATIONS!"
+'COLOR 12: LOCATE 15, 40 - LEN(text$) / 2: PRINT text$
+'text$ = "You won with a total score of" + score$ + "!!!"
+'COLOR 12: LOCATE 16, 40 - LEN(text$) / 2: PRINT text$
+'
+'xvs = 250
+'yvs = 100
+'
+'IF endemal = 1 THEN
+'REDIM vid1(119, 55)
+'REDIM vid2(119, 55)
+'REDIM vid3(119, 55)
+'
+'FOR num = 1 TO 3
+'num$ = STR$(num)
+'num$ = MID$(num$, 2, 4)
+'
+'OPEN "vid" + num$ + ".phg" FOR INPUT AS #1
+'        INPUT #1, xvid
+'        INPUT #1, yvid
+'        FOR xv = 1 TO xvid
+'                FOR yv = 1 TO yvid
+'                        INPUT #1, col
+'                        PSET (xv + xvs - 1, yv + yvs - 1), col
+'                NEXT
+'        NEXT
+'CLOSE
+'
+'IF num = 1 THEN GET (xvs, yvs)-(118 + xvs, 54 + yvs), vid1
+'IF num = 2 THEN GET (xvs, yvs)-(118 + xvs, 54 + yvs), vid2
+'IF num = 3 THEN GET (xvs, yvs)-(118 + xvs, 54 + yvs), vid3
+'NEXT
+'END IF
+'
+'spd = 5000
+'FOR vi = 1 TO 8
+'spd = spd + 5000
+'PUT (xvs, yvs), vid1, PSET: FOR tim = 1 TO spd * speedfaktor: NEXT
+'PUT (xvs, yvs), vid2, PSET: FOR tim = 1 TO spd * speedfaktor: NEXT
+'PUT (xvs, yvs), vid3, PSET: FOR tim = 1 TO spd * speedfaktor: NEXT
+'PUT (xvs, yvs), vid2, PSET: FOR tim = 1 TO spd * speedfaktor: NEXT
+'NEXT
+'PUT (xvs, yvs), vid3, PSET
+'
+'r$ = INPUT$(1)
+'
 GOTO anf
 
 options:
@@ -2162,40 +2214,4 @@ IF intr = 0 THEN
 END IF
 RETURN
 
-'highcheck:
-'OPEN "highscor.es" FOR INPUT AS #1
-'        FOR hi = 1 TO 10
-'                INPUT #1, highname$(hi), highscore(hi)
-'        NEXT
-'CLOSE
-'
-'FOR hi = 1 TO 10
-'        IF oldscore >= highscore(hi) THEN
-'                FOR himove = 9 TO hi STEP -1
-'                        highname$(hi+1) = highname$(hi)
-'                        highscore(hi+1) = highscore(hi)
-'                NEXT
-'                x1 = 150
-'                y1 = 135
-'                x2 = 470
-'                y2 = 199
-'                sfcol = 0
-'                bcol = 4
-'                fcol = 14
-'                GOSUB frame
-'                text$ = "You have entered the highscores!"
-'                COLOR 12: LOCATE 12, 40 - LEN(text$) / 2: PRINT text$
-'                LOCATE 13, 15
-'                INPUT "Please enter your name:"; newname$
-'                newname$ = LEFT$(newname$, 20)
-'                highname$(hi) = newname$
-'                highscore(hi) = oldscore
-'        END IF
-'NEXT
-'
-'OPEN "highscor.es" FOR OUTPUT AS #1
-'        FOR hi = 1 TO 10
-'                write #1, highname$(hi), highscore(hi)
-'        NEXT
-'CLOSE
 

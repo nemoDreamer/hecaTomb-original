@@ -1,6 +1,6 @@
 ON ERROR GOTO fehler
 
-filemain$ = "OWN"
+filemain$ = "HECA"
 switch$ = "p"
 
 SCREEN 9
@@ -46,6 +46,8 @@ REDIM dagger(xpic, ypic)
 REDIM bones(xpic, ypic)
 REDIM zisch(xpic, ypic)
 REDIM title(355, 45)
+
+gosub loadscript
 
 GOSUB loadpics
 
@@ -641,9 +643,9 @@ CASE 7
 	r$ = INPUT$(1)
 	END
 CASE 25
-	COLOR 12
-	PRINT "PRINTER ERROR!!! Device maybe not ready..."
-	RESUME NEXT
+	color 12
+	print"PRINTER ERROR!!! Device maybe not ready..."
+	resume next
 CASE ELSE
 	CLS
 	BEEP
@@ -700,12 +702,27 @@ END IF
 GOSUB prinfo
 RETURN
 
+loadscript:
+DIM lines$(35)
+OPEN "c:\sleek.fnt" FOR INPUT AS #1
+    FOR f = 1 TO 35
+	INPUT #1, letter$, lines$(f)
+    NEXT
+CLOSE
+return
 
 intro:
 	CLS
 
 	speedfak = 4
 
+
+	text$ = "PhilBY Productions"
+	faty = 1: fatx = 1: xt = 235: yt = 70: col$ = "4": stretch$ = "4": GOSUB typetext
+	text$ = "level editor"
+	faty = 4: fatx = 4: xt = 210: yt = 270: col$ = "4": stretch$ = "8": GOSUB typetext
+	text$ = "level editor"
+	faty = 2: fatx = 2: xt = 210: yt = 270: col$ = "12": stretch$ = "8": GOSUB typetext
 
 	xausr = 0
 	yausr = 80
@@ -723,6 +740,41 @@ intro:
 	LOOP
 	IF square = 0 THEN r$ = INPUT$(1)
 	CLS
+RETURN
+
+typetext:
+FOR xtf = 1 TO fatx
+FOR ytf = 1 TO faty
+PSET (xt - 1 + xtf, yt - 1 + ytf), 0
+DRAW "ta" + angle$ + "s" + stretch$ + "c" + col$
+FOR tt = 1 TO LEN(text$)
+	IF ASC(MID$(text$, tt, 1)) >= 65 AND ASC(MID$(text$, tt, 1)) <= 90 THEN MID$(text$, tt, 1) = CHR$(ASC(MID$(text$, tt, 1)) + 32)
+	SELECT CASE MID$(text$, tt, 1)
+		CASE " "
+			DRAW lines$(27)
+		CASE ","
+			DRAW lines$(28)
+		CASE "."
+			DRAW lines$(29)
+		CASE "?"
+			DRAW lines$(30)
+		CASE "!"
+			DRAW lines$(31)
+		CASE "'"
+			DRAW lines$(32)
+		CASE "-"
+			DRAW lines$(33)
+		CASE "("
+			DRAW lines$(34)
+		CASE ")"
+			DRAW lines$(35)
+		CASE ELSE
+			DRAW lines$(ASC(MID$(text$, tt, 1)) - 96)
+	END SELECT
+NEXT
+NEXT ytf
+NEXT xtf
+
 RETURN
 
 cutout:
@@ -756,12 +808,21 @@ printlevel:
 	VIEW PRINT 1 TO 25
 	CLS
 	text$ = "Is your Printer ready?"
-	DO
-	Locate 1,1
-	print text$
-		pready$ = INPUT$(1)
-	LOOP UNTIL pready$ = "y" OR pready$ = "n"
-	IF pready$ = "n" THEN GOTO exitnoprint
+	xpready = 110
+	ypready = 100
+	faty = 9: fatx = 9: xt = xpready: yt = ypready: col$ = "4": stretch$ = "8": GOSUB typetext
+	faty = 5: fatx = 5: xt = xpready + 2: yt = ypready + 2: col$ = "12": stretch$ = "8": GOSUB typetext
+	faty = 1: fatx = 1: xt = xpready + 4: yt = ypready + 4: col$ = "15": stretch$ = "8": GOSUB typetext
+	text$ = " (y-n)"
+	xpready = 245
+	ypready = 150
+	faty = 9: fatx = 9: xt = xpready: yt = ypready: col$ = "4": stretch$ = "8": GOSUB typetext
+	faty = 5: fatx = 5: xt = xpready + 2: yt = ypready + 2: col$ = "12": stretch$ = "8": GOSUB typetext
+	faty = 1: fatx = 1: xt = xpready + 4: yt = ypready + 4: col$ = "15": stretch$ = "8": GOSUB typetext
+	do
+		pready$=input$(1)
+	loop until pready$="y" or pready$="n"
+	if pready$="n" then goto exitnoprint
 '        locate 12
 '        PRINT "   ÚÄÄÄÄÄ¿"
 '        PRINT "  Ú´--- -Ã¿"

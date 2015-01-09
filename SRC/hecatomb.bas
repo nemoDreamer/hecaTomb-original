@@ -6,28 +6,41 @@ SCREEN 9
 
 'goto infocredits '* * * * * * *
 
-
 'Computer Speed
-'+++++++++++++++++++++++++++++++++++++++
-elaps=0
-cls
-oldtimer=timer
-do until currtimer>=1
-currtimer=timer-oldtimer
-elaps=elaps+1
-loop
-
-speedfaktor = elaps/7500
+picture$ = "dont.phg": dpx = 530: dpy = 331: ex = 1: re = 1: GOSUB showpic
+x1 = 230
+y1 = 100
+x2 = 390
+y2 = 220
+sfcol = 0
+bcol = 4
+fcol = 12
+GOSUB frame
+COLOR 4
+LOCATE 9, 35
+PRINT "MegaHerz:"
+LOCATE 11, 34
+PRINT "1) 66 Mhz"
+LOCATE 12, 34
+PRINT "2) 100 Mhz"
+LOCATE 13, 34
+PRINT "3) 220 Mhz"
+LOCATE 14, 34
+PRINT "4) Other..."
+sstart:
+r$ = INPUT$(1)
+IF r$ = "1" THEN speedfaktor = 66 ELSE IF r$ = "2" THEN speedfaktor = 100 ELSE IF r$ = "3" THEN speedfaktor = 220 ELSE IF r$ = "4" THEN LOCATE 15, 35: INPUT "Mhz "; speedfaktor ELSE GOTO sstart
+speedfaktor = speedfaktor / 66
 speedsave=speedfaktor
-'+++++++++++++++++++++++++++++++++++++++
-
 
 OPEN "gsamax.lvl" FOR INPUT AS #1
 INPUT #1, maxlevel
 CLOSE
 
 waittime = 500000
+diff = 3
 slimerate = -1
+megablood = 0
 endemal = 0
 big = 11
 xpic = 11
@@ -75,21 +88,7 @@ REDIM zisch2(xpic, ypic)
 REDIM wide(350, 40)
 REDIM title(355, 45)
 
-REDIM diffspeed(3, 2)
-diffspeed(1, 1) = 15000
-diffspeed(2, 1) = 8000
-diffspeed(3, 1) = 4000
-
-diffspeed(1, 2) = 8000
-diffspeed(2, 2) = 5000
-diffspeed(3, 2) = 3000
 GOSUB loadpics
-
-OPEN "options.dat" FOR INPUT AS #1
-INPUT #1, diff
-INPUT #1, megablood
-CLOSE
-
 
 'goto infohelp '* * * * * * *
 
@@ -157,14 +156,14 @@ wmove = 0
 momove = 0
 count = 0
 badmontim = 10
-seedark = 1
+seedark = 0
 bactim = 0
 bactimes = 10
 killbac = 0
 speax = 26.5
 clex = 27.5
-monspeed = diffspeed(diff, 1)
-wspeed = diffspeed(diff, 2)
+IF speed = 0 THEN monspeed = 4000
+IF speed = 0 THEN wspeed = 3000
 fishspeed=10
 
 if (x=0) and (y=0) then
@@ -234,12 +233,12 @@ code3$ = "grand finale"
 code4$ = "yohoho"
 code5$ = "shark soup"
 code6$ = "acid snot"
-code7$ = "N"
-code8$ = "wimpey"
+code7$ = "see by touch"
+code8$ = "wimpey cheater code"
 code9$ = "see the dark"
 code10$ = "trace the dark"
 code11$ = "freeze all"
-code12$ = "whizz"
+code12$ = "impossible speed"
 
 code:
 INPUT code$
@@ -262,7 +261,7 @@ IF code$ = code4$ THEN
 END IF
 IF code$ = code5$ THEN PLAY "t150 l50 o2 cdefga l25 b": daggers = 10: scr = scr / 2: PRINT "Next Code"; : GOTO code
 IF code$ = code6$ THEN PLAY "t150 l50 o2 cdefga l25 b": killbac = 1: scr = scr / 2: PRINT "Next Code"; : GOTO code
-IF code$ = code7$ THEN PLAY "t150 l50 o2 cdefga l25 b": gosub savegame: PRINT "Next Code"; : GOTO code
+IF code$ = code7$ THEN PLAY "t150 l50 o2 cdefga l25 b": seedark = 1: scr = scr / 2: PRINT "Next Code"; : GOTO code
 IF code$ = code8$ THEN PLAY "t150 l50 o2 cdefga l25 b": clef = 10: spears = 10: daggers = 10: killbac = 1: seedark = 1: scr = 0: PRINT "Next Code"; : GOTO code
 IF code$ = code10$ THEN PLAY "t150 l50 o2 cdefga l25 b": crumb = 1: PRINT "Next Code"; : GOTO code
 IF code$ = code9$ THEN
@@ -511,26 +510,26 @@ IF monst(mo, 1) = x AND monst(mo, 2) = y THEN
 		PLAY "mbmbmbmb t200 l50 o3 bagfed l 25 c"
 		GOSUB prscore
 	ELSE
-'                bactim = bactim + 1
-'                IF bactim = bactimes THEN
-'                        drx = x
-'                        dry = y
-'                        what = 1.1
-'                        GOSUB drawobjs
-'                        GOSUB cb
-'                        LOCATE 21, 1
-'                        PLAY "mbmbmbmb o2 t150 l50 bagfed l25 c"
-'                        PRINT "You got killed!!!"
-'                        PRINT "Retry Level? (y/n)"
-'25 :                    O$ = INPUT$(1)
-'                        IF O$ <> "y" AND O$ <> "n" THEN GOTO 25
-'                        IF O$ = "y" THEN IF wholegame = 1 THEN GOTO restartnew ELSE GOTO restart
-'                        GOTO anf
-'                ELSE
-			score = score - (1000 * scr)
-			PLAY "mbmbmbmb t200 l50 o3 bagfed l25 c"
+		bactim = bactim + 1
+		IF bactim = bactimes THEN
+			drx = x
+			dry = y
+			what = 1.1
+			GOSUB drawobjs
+			GOSUB cb
+			LOCATE 21, 1
+			PLAY "mbmbmbmb o2 t150 l50 bagfed l25 c"
+			PRINT "You got killed!!!"
+			PRINT "Retry Level? (y/n)"
+25 :                    O$ = INPUT$(1)
+			IF O$ <> "y" AND O$ <> "n" THEN GOTO 25
+			IF O$ = "y" THEN IF wholegame = 1 THEN GOTO restartnew ELSE GOTO restart
+			GOTO anf
+		ELSE
+			score = score - (100 * scr)
+			PLAY "mbmbmbmb t200 l50 o3 bagfed l 25 c"
 			GOSUB prscore
-'                END IF
+		END IF
 	END IF
  END IF
 END IF
@@ -566,8 +565,8 @@ END IF
 '----------------------------------------------------------------------------
 'up
 IF r$ = CHR$(0) + CHR$(72) AND y > 1 THEN
-	'IF feld(x, y - 1) = 222 AND seedark = 1 THEN drx = x: dry = y - 1: what = 22.22: GOSUB drawobjs
-	IF feld(x, y - 1) <> 333 AND feld(x, y - 1) <> 2 AND feld(x, y - 1) <> 1.1 AND feld(x, y - 1) <> 222 AND feld(x, y - 1) <> 22.22 THEN
+	IF feld(x, y - 1) = 222 AND seedark = 1 THEN drx = x: dry = y - 1: what = 22.22: GOSUB drawobjs
+	IF feld(x, y - 1) <> 333 AND feld(x, y - 1) <> 2 AND feld(x, y - 1) <> 1.1 AND feld(x, y - 1) <> 222 THEN
 		IF feld(x, y - 1) = 7 THEN
 			IF clef <> 0 THEN clef = clef - 1: feld(x, y - 1) = 75: y = y - 1: GOSUB prclef:  ELSE
 		ELSE
@@ -578,8 +577,8 @@ END IF
 '----------------------------------------------------------------------------
 'down
 IF r$ = CHR$(0) + CHR$(80) AND y < ymax THEN
-	'IF feld(x, y + 1) = 222 AND seedark = 1 THEN drx = x: dry = y + 1: what = 22.22: GOSUB drawobjs
-	IF feld(x, y + 1) <> 333 AND feld(x, y + 1) <> 2 AND feld(x, y + 1) <> 1.1 AND feld(x, y + 1) <> 222 AND feld(x, y + 1) <> 22.22 THEN
+	IF feld(x, y + 1) = 222 AND seedark = 1 THEN drx = x: dry = y + 1: what = 22.22: GOSUB drawobjs
+	IF feld(x, y + 1) <> 333 AND feld(x, y + 1) <> 2 AND feld(x, y + 1) <> 1.1 AND feld(x, y + 1) <> 222 THEN
 		IF feld(x, y + 1) = 7 THEN
 			IF clef <> 0 THEN clef = clef - 1: feld(x, y + 1) = 75: y = y + 1: GOSUB prclef:  ELSE
 		ELSE
@@ -590,8 +589,8 @@ END IF
 '----------------------------------------------------------------------------
 'left
 IF r$ = CHR$(0) + CHR$(75) AND x > 1 THEN
-	'IF feld(x - 1, y) = 222 AND seedark = 1 THEN drx = x - 1: dry = y: what = 22.22: GOSUB drawobjs
-	IF feld(x - 1, y) <> 333 AND feld(x - 1, y) <> 2 AND feld(x - 1, y) <> 1.1 AND feld(x - 1, y) <> 222 AND feld(x-1, y) <> 22.22 THEN
+	IF feld(x - 1, y) = 222 AND seedark = 1 THEN drx = x - 1: dry = y: what = 22.22: GOSUB drawobjs
+	IF feld(x - 1, y) <> 333 AND feld(x - 1, y) <> 2 AND feld(x - 1, y) <> 1.1 AND feld(x - 1, y) <> 222 THEN
 		IF feld(x - 1, y) = 7 THEN
 			IF clef <> 0 THEN clef = clef - 1: feld(x - 1, y) = 75: x = x - 1: GOSUB prclef:  ELSE
 		ELSE
@@ -602,8 +601,8 @@ END IF
 '----------------------------------------------------------------------------
 'right
 IF r$ = CHR$(0) + CHR$(77) AND x < xmax THEN
-	'IF feld(x + 1, y) = 222 AND seedark = 1 THEN drx = x + 1: dry = y: what = 22.22: GOSUB drawobjs
-	IF feld(x + 1, y) <> 333 AND feld(x + 1, y) <> 2 AND feld(x + 1, y) <> 1.1 AND feld(x + 1, y) <> 222 AND feld(x+1, y) <> 22.22 THEN
+	IF feld(x + 1, y) = 222 AND seedark = 1 THEN drx = x + 1: dry = y: what = 22.22: GOSUB drawobjs
+	IF feld(x + 1, y) <> 333 AND feld(x + 1, y) <> 2 AND feld(x + 1, y) <> 1.1 AND feld(x + 1, y) <> 222 THEN
 		IF feld(x + 1, y) = 7 THEN
 			IF clef <> 0 THEN clef = clef - 1: feld(x + 1, y) = 75: x = x + 1: GOSUB prclef:  ELSE
 		ELSE
@@ -612,8 +611,6 @@ IF r$ = CHR$(0) + CHR$(77) AND x < xmax THEN
 	END IF
 END IF
 '----------------------------------------------------------------------------
-gosub drawdark
-
 drx = x
 dry = y
 IF feld(x, y) = 55 OR feld(x, y) = 77 THEN what = 33 ELSE what = 11
@@ -669,26 +666,26 @@ IF feld(x, y) = 4.5 THEN
 			PLAY "mbmbmbmb t200 l50 o3 bge l 25 c"
 			GOSUB prscore
 		ELSE
-'                        bactim = bactim + 1
-'                        IF bactim = bactimes THEN
-'                                drx = x
-'                                dry = y
-'                                what = 1.1
-'                                GOSUB drawobjs
-'                                GOSUB cb
-'                                LOCATE 21, 1
-'                                PLAY "mbmbmbmb o2 t150 l50 bagfed l25 c"
-'                                PRINT "You got killed!!!"
-'                                PRINT "Retry Level? (y/n)"
-'35 :                            O$ = INPUT$(1)
-'                                IF O$ <> "y" AND O$ <> "n" THEN GOTO 35
-'                                IF O$ = "y" THEN IF wholegame = 1 THEN GOTO restartnew ELSE GOTO restart
-'                                GOTO anf
-'                        ELSE
-				score = score - (1000 * scr)
+			bactim = bactim + 1
+			IF bactim = bactimes THEN
+				drx = x
+				dry = y
+				what = 1.1
+				GOSUB drawobjs
+				GOSUB cb
+				LOCATE 21, 1
+				PLAY "mbmbmbmb o2 t150 l50 bagfed l25 c"
+				PRINT "You got killed!!!"
+				PRINT "Retry Level? (y/n)"
+35 :                            O$ = INPUT$(1)
+				IF O$ <> "y" AND O$ <> "n" THEN GOTO 35
+				IF O$ = "y" THEN IF wholegame = 1 THEN GOTO restartnew ELSE GOTO restart
+				GOTO anf
+			ELSE
+				score = score - (100 * scr)
 				PLAY "mbmbmbmb t200 l50 o3 bge l 25 c"
 				GOSUB prscore
-'                        END IF
+			END IF
 		END IF
 END IF
 
@@ -1122,12 +1119,12 @@ params$(4, 1) = "Information"
 params$(5, 1) = "Play own level"
 params$(6, 1) = "Quit Game"
 
-params$(1, 2) = "NEW GAME"
-params$(2, 2) = "RESTORE GAME"
-params$(3, 2) = "OPTIONS"
-params$(4, 2) = "INFORMATION"
-params$(5, 2) = "PLAY OWN LEVEL"
-params$(6, 2) = "QUIT GAME"
+params$(1, 2) = "¤îw gàmî"
+params$(2, 2) = "çî$Âíçî gàmî"
+params$(3, 2) = "ípÂ‹í¤$"
+params$(4, 2) = "‹¤ŸíçmàÂ‹í¤"
+params$(5, 2) = "plàæ íw¤ lîvîl"
+params$(6, 2) = "q–‹Â gàmî"
 
 x1 = 240
 y1 = 185
@@ -1335,11 +1332,11 @@ params$(3, 1) = "What's PhilBY?"
 params$(4, 1) = "Credits"
 params$(5, 1) = "Quit to Main"
 
-params$(1, 2) = "HELP"
-params$(2, 2) = "STORY"
-params$(3, 2) = "WHAT'S PHILBY?"
-params$(4, 2) = "CREDITS"
-params$(5, 2) = "QUIT TO MAIN"
+params$(1, 2) = "hîlp"
+params$(2, 2) = "$Âíçæ"
+params$(3, 2) = "whàÂ'$ ph‹láæ?"
+params$(4, 2) = "cçîë‹Âs"
+params$(5, 2) = "q–‹Â Âí mà‹¤"
 
 	PUT (141, 100), wide, PSET
 
@@ -1858,7 +1855,8 @@ DRAW "c0 bm121,180 bm+2,+2   u10r8f2d2m-2,+2l5d4 bm+10,+0u10r3d5r4u5r3d10 bm+3,+
 DRAW "c14 bm120,180   u10r8f2d2m-2,+2l5d4 bm+10,+0u10r3d5r4u5r3d10 bm+3,+0u5nr3bu2u3r3d3nl3bd2d5 bm+3,-10d10r8u3nl5 bm+3,+3u10r8f2d1m-2,+2nl5f2d1m-2,+2nl5 bm+8,0m+5,-10l4m-2,+5m-5,-10l3"
 DRAW "c14 bm121,180   u10r8f2d2m-2,+2l5d4 bm+10,+0u10r3d5r4u5r3d10 bm+3,+0u5nr3bu2u3r3d3nl3bd2d5 bm+3,-10d10r8u3nl5 bm+3,+3u10r8f2d1m-2,+2nl5f2d1m-2,+2nl5 bm+8,0m+5,-10l4m-2,+5m-5,-10l3"
 
-FOR tim = 1 TO 2500 * speedfaktor
+FOR tim = 1 TO 2500 * speedfaktor / 4
+IF INKEY$ <> "" THEN GOTO endlogo
 NEXT
 
 DRAW "ta-5"
@@ -1884,7 +1882,8 @@ DRAW "c14 bm121,181   u10r8f2d2m-2,+2l5d4 bm+10,+0u10r3d5r4u5r3d10 bm+3,+0u5nr3b
 DRAW "c14 bm120,182   u10r8f2d2m-2,+2l5d4 bm+10,+0u10r3d5r4u5r3d10 bm+3,+0u5nr3bu2u3r3d3nl3bd2d5 bm+3,-10d10r8u3nl5 bm+3,+3u10r8f2d1m-2,+2nl5f2d1m-2,+2nl5 bm+8,0m+5,-10l4m-2,+5m-5,-10l3"
 DRAW "c14 bm121,182   u10r8f2d2m-2,+2l5d4 bm+10,+0u10r3d5r4u5r3d10 bm+3,+0u5nr3bu2u3r3d3nl3bd2d5 bm+3,-10d10r8u3nl5 bm+3,+3u10r8f2d1m-2,+2nl5f2d1m-2,+2nl5 bm+8,0m+5,-10l4m-2,+5m-5,-10l3"
 
-FOR tim = 1 TO 50000 * speedfaktor
+FOR tim = 1 TO 50000 * speedfaktor / 4
+IF INKEY$ <> "" THEN GOTO endlogo
 NEXT
 
 dela = 7000
@@ -1897,7 +1896,8 @@ DRAW "m+7,+4 bm+3,+0u10r10d3l7d1r5d3l5d1r7 bm+3,+0nr5d2r10e2u1"
 DRAW "m-2,-2l8m-2,-2u1e2r8d2l5 bm+10,+8u10r10d3l7d1r5d3l5d1r7"
 DRAW "bm+3,+2r3nu5l3u10r3m+5,+10r3u10l3d5   bm+8,+5r3nu3l3u7l3u3r9"
 DRAW "bm+3,+8nr5d2r10e2u1m-2,-2l8m-2,-2u1e2r8d2l5 "
-FOR tim = 1 TO dela * speedfaktor
+FOR tim = 1 TO dela * speedfaktor / 4
+IF INKEY$ <> "" THEN GOTO endlogo
 NEXT
 NEXT
 
@@ -1908,18 +1908,21 @@ DRAW "m+7,+4 bm+3,+0u10r10d3l7d1r5d3l5d1r7 bm+3,+0nr5d2r10e2u1"
 DRAW "m-2,-2l8m-2,-2u1e2r8d2l5 bm+10,+8u10r10d3l7d1r5d3l5d1r7"
 DRAW "bm+3,+2r3nu5l3u10r3m+5,+10r3u10l3d5   bm+8,+5r3nu3l3u7l3u3r9"
 DRAW "bm+3,+8nr5d2r10e2u1m-2,-2l8m-2,-2u1e2r8d2l5 "
-FOR tim = 1 TO dela * speedfaktor
+FOR tim = 1 TO dela * speedfaktor / 4
+IF INKEY$ <> "" THEN GOTO endlogo
 NEXT
 NEXT
 
 
-FOR tim = 1 TO 60000 * speedfaktor
+FOR tim = 1 TO 60000 * speedfaktor / 4
+IF INKEY$ <> "" THEN GOTO endlogo
 NEXT
 
 FOR x = 1 TO 24
 LOCATE 24
 PRINT ""
-FOR tim = 1 TO 6000 * speedfaktor
+FOR tim = 1 TO 6000 * speedfaktor / 4
+IF INKEY$ <> "" THEN GOTO endlogo
 NEXT
 NEXT
 
@@ -1990,20 +1993,20 @@ GOTO anf
 
 options:
 
-
 CLS
 
 PUT (145, 1), wide, PSET '* * * * * * * * * *
 text$ = "HECATOMB": COLOR 14: LOCATE 5, 40 - LEN(text$) / 2: PRINT text$
 text$ = "Full Version by PhilBY": COLOR 4: LOCATE 6, 40 - LEN(text$) / 2: PRINT text$
 text$ = "Options": COLOR 12: LOCATE 8, 40 - LEN(text$) / 2: PRINT text$
+speed = 1
 dd = 0
 
 decx = 297
 decy = 162
 
-'diffs came here ??????????????????????????????????????
-REDIM diffspeed$(3, 2)
+DIM diffspeed$(3, 2)
+DIM diffspeed(3, 2)
 diffspeed$(1, 1) = "fa_baby.phg"
 diffspeed$(2, 1) = "fa_norm.phg"
 diffspeed$(3, 1) = "fa_diff.phg"
@@ -2012,13 +2015,20 @@ diffspeed$(1, 2) = "WWWhaaaaa!"
 diffspeed$(2, 2) = "Normal"
 diffspeed$(3, 2) = "D... d... difficult!"
 
+diffspeed(1, 1) = 15000
+diffspeed(2, 1) = 8000
+diffspeed(3, 1) = 4000
+
+diffspeed(1, 2) = 8000
+diffspeed(2, 2) = 5000
+diffspeed(3, 2) = 3000
 
 text$ = "UP and DOWN to choose difficulty level,"
 COLOR 4: LOCATE 10, 40 - LEN(text$) / 2: PRINT text$
 text$ = "ENTER to accept"
 COLOR 4: LOCATE 11, 40 - LEN(text$) / 2: PRINT text$
 
-LOCATE 16, 1
+LOCATE 13, 1
 PRINT TAB(80); ""
 text$ = diffspeed$(diff, 2)
 COLOR 12: LOCATE 16, 40.5 - LEN(text$) / 2: PRINT text$
@@ -2079,7 +2089,6 @@ wspeed = diffspeed(diff, 2)
 	bloodx = 29.5
 	bloody = 25.5
 
-	if megablood = 0 then
 		dry = bloody
 		FOR drx = bloodx - 1 TO bloodx + 1
 			what = 0
@@ -2093,29 +2102,11 @@ wspeed = diffspeed(diff, 2)
 		dry = bloody
 		what = 22
 		GOSUB drawobjs
-	else
-		dry = bloody
-		FOR drx = bloodx - 1 TO bloodx + 1
-			what = 22
-			GOSUB drawobjs
-		NEXT
-		drx = bloodx
-		FOR dry = bloody - 1 TO bloody + 1
-			what = 22
-			GOSUB drawobjs
-		NEXT
-	end if
 
 30 :
 	speed$ = INPUT$(1)
 	IF speed$ = CHR$(13) THEN
 		CLS
-
-		OPEN "options.dat" FOR outPUT AS #1
-		write #1, diff
-		write #1, megablood
-		CLOSE
-
 		GOTO titlepage
 	ELSE
 		IF megablood = 0 THEN megablood = 1 ELSE megablood = 0
@@ -2150,9 +2141,6 @@ wspeed = diffspeed(diff, 2)
 GOTO 30
 
 CLS
-
-beep
-
 GOTO titlepage
 
 
@@ -2226,33 +2214,4 @@ IF intr = 0 THEN
 END IF
 RETURN
 
-
-drawdark:
-'xmax = 58
-'ymax = 25
-
-darxs=-1
-darxe=1
-
-darys=-1
-darye=1
-
-if x=xmax then darxe=0
-if x=1 then darxs=0
-
-if y=ymax then darye=0
-if y=1 then darys=0
-
-for darx=darxs to darxe
-	for dary=darys to darye
-	IF feld(x +darx, y+dary) = 222 AND seedark = 1 THEN
-		drx = x + darx
-		dry = y+dary
-		what = 22.22
-		GOSUB drawobjs
-		feld(x+darx, y+dary)=22.22
-	end if
-next
-next
-return
 
