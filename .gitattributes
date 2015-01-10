@@ -1,0 +1,6 @@
+# Declare files that will always have CRLF line endings on checkout.
+*.bas text eol=crlf
+*.bat text eol=crlf
+*.dat text eol=crlf
+*.lvl text eol=crlf
+*.phg text eol=crlf
