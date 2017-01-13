@@ -8,7 +8,13 @@ The original HecaTomb I &amp; II in QBasic, which I developed when I was 16, in 
 
 ## How to play
 
-Install [dosbox](http://dosbox.com), crank that sh*t up to 15,000 cycles.
+- Install [dosbox](http://dosbox.com), crank that sh\*t up to 15,000 cycles.
+- Start the game:
+
+  ```bash
+  cd SRC
+  heca2.exe
+  ```
 
 ## Level Editor
 
